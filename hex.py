@@ -174,6 +174,9 @@ def clear():
 def play_seq():
     clear()
     for event in seq:
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                exit()
         do_event(*event) 
         draw(screen)
         time.sleep(.5)
