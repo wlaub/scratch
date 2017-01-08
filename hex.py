@@ -1,12 +1,15 @@
 import pygame
 from pygame.locals import *
 import sys, time, math
+import pickle
 
 """
 Vertex Dispenser simulator
 Requires pygame
 Left click to capture vertex, right click to uncapture.
 Press p to replay the sequences and escape to clear.
+Press s to save the current sequence
+Press l to load the saved sequence
 """
 
 size = (500,500)
@@ -137,15 +140,15 @@ def cell_off(c):
         tadj = [x.val for x in tcells if x.locked and tc.get_is_adj(x)]
         tc.update(tadj)
 
-def do_event(event, fake=False):
+def do_event(pos, button, fake=False):
     for c in tcells:
-        if c.get_hit(event.pos):
+        if c.get_hit(pos):
             if not fake:
-                seq.append(event)
-            if event.button == 1:
+                seq.append((pos, button, True))
+            if button == 1:
                 cell_on(c)
                 break
-            elif event.button == 3:
+            elif button == 3:
                 cell_off(c)
                 break
  
@@ -169,10 +172,9 @@ def clear():
 
 
 def play_seq():
-    gif = gifimg.GIFImage("hex.gif")
     clear()
     for event in seq:
-        do_event(event, True) 
+        do_event(*event) 
         draw(screen)
         time.sleep(.5)
 
@@ -189,9 +191,16 @@ while 1:
             clear()
             seq=[]
         elif event.type == MOUSEBUTTONDOWN:
-            do_event(event)
-        elif event.type == KEYDOWN and event.key == K_p:
-            play_seq()                
+            do_event(event.pos, event.button)
+        elif event.type == KEYDOWN: 
+            if event.key == K_p:
+                play_seq()                
+            elif event.key == K_s:
+                with open('hex.sav', 'w') as f:
+                    pickle.dump(seq, f)
+            elif event.key == K_l:
+                with open('hex.sav', 'r') as f:
+                    seq = pickle.load(f)
 
     draw(screen)
 
