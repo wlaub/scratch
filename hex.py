@@ -172,14 +172,20 @@ def clear():
 
 
 def play_seq():
-    clear()
-    for event in seq:
-        for e in pygame.event.get():
-            if e.type == pygame.QUIT:
-                exit()
-        do_event(*event) 
-        draw(screen)
-        time.sleep(.5)
+    done = False
+    while not done:
+        clear()
+        for event in seq:
+            for e in pygame.event.get():
+                if e.type == pygame.QUIT:
+                    done = True
+                if e.type == KEYDOWN and e.key == K_p:
+                    done = True
+            do_event(*event) 
+            draw(screen)
+            if not done:
+                time.sleep(.5)
+
 
 Cell.init()
 tcells = make_board(8,7)
