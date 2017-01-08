@@ -2,6 +2,13 @@ import pygame
 from pygame.locals import *
 import sys, time, math
 
+"""
+Vertex Dispenser simulator
+Requires pygame
+Left click to capture vertex, right click to uncapture.
+Press p to replay the sequences and escape to clear.
+"""
+
 size = (500,500)
 center = (size[0]/2, size[1]/2)
 
@@ -29,6 +36,7 @@ class Cell():
                 , (255,255,255)
                 ]
     r=16
+    img = []
 
     def __init__(self, x, y):
         self.x = x
@@ -36,6 +44,21 @@ class Cell():
         self.val = 1
         self.locked = 0
         self.adj = self.get_adjacent()
+
+    @staticmethod
+    def init():
+        N=6.
+        r = Cell.r-.5
+        c = 2*math.pi/N
+        s = Cell.r
+
+        for color in Cell.colormap:
+            img = pygame.Surface((s*2,s*2), depth=32)
+            img.set_colorkey((0,0,0,0))
+            pygame.draw.polygon ( img, color
+                                , [(s+r*math.cos(c*x), s+r*math.sin(c*x)) for x in range(int(N))] 
+                                )
+            Cell.img.append(img)
 
     def get_adjacent(self):
         off = 2*(self.x%2) -1
@@ -52,7 +75,7 @@ class Cell():
 
     def get_coords(self):
         off = (self.x%2)/2.
-        return (self.x*.866*self.r*2, (self.y+off)*self.r*2)
+        return (self.x*.866*self.r*2+self.r/2., (self.y+off)*self.r*2)
 
     def get_hit(self, pos):
         loc = add_pos(self.get_coords(), center)
@@ -62,17 +85,26 @@ class Cell():
         return dist < self.r*self.r
 
     def draw(self, screen):
-        pos = add_pos(self.get_coords(), center)
         text = font.render(str(self.val), True, (0,0,0))
-        tpos = add_pos(pos, (text.get_size()[0]/2., text.get_size()[1]/2.))
+
+        pos = add_pos(self.get_coords(), center)
+
+        hoff = (-self.r,-self.r)       
+        hpos = floor_pos(add_pos(pos, hoff))
+
+        toff = (-text.get_size()[0]/2., -text.get_size()[1]/2.)
+        tpos = add_pos(pos, toff)
+
         tpos = floor_pos(tpos)
         pos = floor_pos(pos)
 
-        color = self.colormap[self.val] if self.locked else self.colormap[0]
-        pygame.draw.circle(screen, color, tpos, self.r-1)
+        val = self.val if self.locked else 0
+#        color = self.colormap[self.val] if self.locked else self.colormap[0]
+#        pygame.draw.circle(screen, color, pos, self.r-2)
+        screen.blit(self.img[val], hpos)
         if self.val == 0:
             return
-        screen.blit(text, pos)
+        screen.blit(text, tpos)
 
     def update(self, adj):
         """
@@ -81,10 +113,10 @@ class Cell():
         self.val = min([x for x in range(1,10) if not x in adj])
 
 
-def make_board(N):
+def make_board(x,y):
     result = []
-    for i in range(-N,N):
-        for j in range(-N,N):
+    for i in range(-x,x):
+        for j in range(-y,y):
             ncell = Cell(i,j)
             result.append(ncell)
     return result
@@ -124,6 +156,9 @@ def draw(screen):
     for c in tcells:
         c.draw(screen)
 
+    text = font.render("Moves: {}".format(len(seq)), True, (255,255,255))
+    screen.blit(text, (0,0))
+
     pygame.display.flip()
 
 
@@ -134,13 +169,15 @@ def clear():
 
 
 def play_seq():
+    gif = gifimg.GIFImage("hex.gif")
     clear()
     for event in seq:
         do_event(event, True) 
         draw(screen)
         time.sleep(.5)
 
-tcells = make_board(7)
+Cell.init()
+tcells = make_board(8,7)
 seq = []
 
 while 1:
