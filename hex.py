@@ -47,6 +47,7 @@ class Cell():
         self.val = 1
         self.locked = 0
         self.adj = self.get_adjacent()
+        self.pos = self.get_coords()
 
     @staticmethod
     def init():
@@ -90,7 +91,7 @@ class Cell():
     def draw(self, screen):
         text = font.render(str(self.val), True, (0,0,0))
 
-        pos = add_pos(self.get_coords(), center)
+        pos = add_pos(self.pos, center)
 
         hoff = (-self.r,-self.r)       
         hpos = floor_pos(add_pos(pos, hoff))
