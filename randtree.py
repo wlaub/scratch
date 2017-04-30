@@ -12,8 +12,8 @@ font = pygame.font.SysFont(pygame.font.get_default_font(), 18)
 screen = pygame.display.set_mode(size)
 canvas = pygame.Surface(size,SRCALPHA)
 
-fades = [(0,255,0,1), (255,0,255,1)]
-fades = [(0,255,0,1)]
+fades = [(0,128,0,1), (128,0,128,1)]
+fades = [(0,128,0,1)]
 f_canvas = [pygame.Surface(size,SRCALPHA) for x in fades]
 
 c_mult = []
@@ -24,9 +24,7 @@ class Turtle():
     Does a random walk and stuff
     """
 
-    r_split = 1
-    r_merge = 1200
-    r_walk = 120
+    r_split = 500
     c_x = [-1,0,1]
     c_y = [-1,0,1]
 
@@ -38,36 +36,22 @@ class Turtle():
         global c_mult, c_alone
         local = [x for x in turtles if x.x == self.x and x.y == self.y]
         if len(local) > 1:
-            action = 1
-        elif len(local) > 1:
-            action = random.choice(c_mult)
-        else:
-            action = random.choice(c_alone)
-
-        if action == 1:
             turtles.remove(self)
-        if action == 0:
-            turtles.append(Turtle(self.x, self.y))
+        else:
+            if len(turtles) < 500 and random.randint(0,self.r_split) == 0:
+                turtles.append(Turtle(self.x, self.y))
 
-        xstep = random.choice(self.c_x)
-        ystep = random.choice(self.c_y)
-        self.x = max(0,min(self.x+xstep, 500))
-        self.y = max(0,min(self.y+ystep, 500))
-
-
-
-c_mult = []
-c_mult.extend([0]*Turtle.r_split)
-c_mult.extend([1]*Turtle.r_merge)
-c_mult.extend([2]*Turtle.r_walk)
-c_alone = [x for x in c_mult if x != 1]
+            xstep = random.choice(self.c_x)
+            ystep = random.choice(self.c_y)
+            self.x = max(0,min(self.x+xstep, 500))
+            self.y = max(0,min(self.y+ystep, 500))
 
 
 turtles = [Turtle()]
 bg = (0,0,0)
 fg = (255,255,255,128)
 counter = 0
-debug = True
+debug = False
 
 while 1:
 #    time.sleep(.01)
@@ -90,7 +74,7 @@ while 1:
 
 
     for t in turtles:
-        canvas.set_at((int(t.x), int(t.y)), fg)
+        canvas.set_at((t.x, t.y), fg)
 
     for f in f_canvas:
         f.blit(canvas,(0,0))
