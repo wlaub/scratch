@@ -174,6 +174,7 @@ def clear():
 
 def play_seq():
     done = False
+    paused = False
     while not done:
         clear()
         for event in seq:
@@ -182,6 +183,20 @@ def play_seq():
                     done = True
                 if e.type == KEYDOWN and e.key == K_p:
                     done = True
+                if e.type == KEYDOWN and e.key == K_SPACE:
+                    paused = ~paused
+            while paused:
+                time.sleep(.2)
+                for e in pygame.event.get():
+                    if e.type == pygame.QUIT:
+                        done = True
+                        paused = False
+                    if e.type == KEYDOWN and e.key == K_p:
+                        done = True
+                        paused = False
+                    if e.type == KEYDOWN and e.key == K_SPACE:
+                        paused = False
+
             do_event(*event) 
             draw(screen)
             if not done:
@@ -205,6 +220,8 @@ while 1:
         elif event.type == KEYDOWN: 
             if event.key == K_p:
                 play_seq()                
+            elif event.key == K_BACKSPACE:
+                seq = seq[:-1]   
             elif event.key == K_s:
                 with open('hex.sav', 'w') as f:
                     pickle.dump(seq, f)
