@@ -16,11 +16,12 @@ def colormap(val):
 class Unit():
 
 
-    def __init__(self, hrank, srank=100):
+    def __init__(self, hrank, srank=100, color = (0,0,0)):
         self.hrank = hrank
         self.srank = srank
         self.w = 0
         self.l = 0
+        self.color = color
 
     def improve(self, other):
         return
@@ -39,7 +40,7 @@ class Group():
     noise = 10
 
     def __init__(self, size):
-        self.units = [Unit(x) for x in range(size)]
+        self.units = [Unit(x, random.randint(0,size), colormap(x/float(size))) for x in range(size)]
         self.perfect = sorted(self.units, key = lambda x: x.hrank)
 
 
@@ -110,12 +111,21 @@ class Group():
     def draw(self, screen, xpos = 0):
         rankings = self.get_ranking()
         for i, u in enumerate(rankings):
-            color = tuple(colormap(u.hrank/float(len(rankings))))
-            screen.set_at((xpos, i), color)
+            screen.set_at((xpos, i), u.color)
 
 
-N = 100
-size = (N,N)
+scale = 4
+
+N = 32
+M = 32
+
+noise = range(M)
+noise = [N/4.]*M
+
+groups = [Group(N) for x in range(M)]
+for n,g in zip(noise,groups): g.noise = n*float(N)/M
+
+size = (M+1,N+1)
 center = (size[0]/2, size[1]/2)
 
 pygame.init()
@@ -123,23 +133,18 @@ pygame.font.init()
 font = pygame.font.SysFont(pygame.font.get_default_font(), 18)
 font = pygame.font.SysFont('ubuntumono', 16)
 
-screen = pygame.display.set_mode(size)
-
-noise = range(100)
-
-groups = [Group(N) for x in range(len(noise))]
-for n,g in zip(noise,groups): g.noise = n
+screen = pygame.display.set_mode(map(lambda x: x*scale, size))
+canvas = pygame.Surface(size)
 
 tidx= 0
 ticks = 1
 
 while 1:
-    time.sleep(.02)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
     
-    screen.fill((0,0,0))
+    canvas.fill((0,0,0))
 
     
 
@@ -147,18 +152,27 @@ while 1:
     for i in range(ticks):
         for g in groups:
             g.tick(tidx)
-        tidx += 1
+        canvas.set_at((M, tidx), (255,255,255))
+        tidx = random.randint(0,N)
+        tidx %= N
         if tidx == N: tidx = 0
     stop = time.time()
     if stop-start < .005: ticks+=1
     elif stop-start > .02: ticks = max(1, ticks-1)
+
+    sleeptime = .02-(stop-start)
     print(ticks) 
 
     for i,g in enumerate(groups):
-        g.draw(screen,i)
+        g.draw(canvas,i)
+
+
+
+    pygame.transform.scale(canvas, screen.get_size(), screen)
 
     pygame.display.flip()
 
+    if sleeptime > 0: time.sleep(sleeptime)
 
 """
 for noise in [50]:
