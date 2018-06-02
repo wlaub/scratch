@@ -21,8 +21,11 @@ class Poly():
         return [[off[0]+r*math.sin(x*a+aoff), off[1]-r*math.cos(x*a+aoff)] for x in range(int(math.ceil(n)))]
  
 
+    def get_factor(self):
+        return 1./math.cos(3.14/self.n)
+
     def get_outer_radius(self):
-        return self.r/math.cos(3.14/(self.n))
+        return self.r*self.get_factor()
 
     def draw(self, screen, offset, inner = False):
 
@@ -69,6 +72,11 @@ font = pygame.font.SysFont('ubuntumono', 16)
 screen = pygame.display.set_mode(map(lambda x: x*scale, size))
 canvas = pygame.Surface(size)
 
+speed = 10
+rrate = .319
+rstep = .001
+rlast = 0
+
 while 1:
     time.sleep(.1)
     for event in pygame.event.get():
@@ -76,9 +84,31 @@ while 1:
             exit()
 
     for i, poly in enumerate(polies):
-        poly.n+=.001
-        if i > 0:
-            poly.r = polies[i-1].get_outer_radius()   
+        poly.n+=.01*speed
+        if i == 0:
+            poly.r += rrate*speed
+            if poly.n >= 4:
+
+                nr = poly.r/poly.get_factor()
+                npoly = Poly(r)
+                tr = r*npoly.get_factor()
+                rerr = poly.r - tr
+                print(poly.r, tr, rerr, rrate)
+                if rerr > 0:
+                    if rlast < 0:
+                        rstep /= 2.
+                    rrate -=rstep
+                else:
+                    if rlast >= 0:
+                        rstep /=2.
+                    rrate += rstep
+
+
+                npoly.n = poly.n-1
+                polies.insert(0, npoly)
+                polies = polies[:-1]
+        else:
+            poly.r = polies[i-1].get_outer_radius()
  
     canvas.fill((0,0,0))
 
